@@ -1,0 +1,14 @@
+# wavr
+
+## reader
+
+[X] read file metadata
+[X] read samples
+[X] write samples to output_samples.txt
+[X] write script to validate samples by visualizing
+[X] validate -> looks good
+[X] write script to validate samples by playback
+[-] validate
+    [ ] playback of out_samples.txt requires double the sample rate for some reason
+        [ ] are we recording samples twice?
+        [ ] does input.wav have 44.1k sample rate?
