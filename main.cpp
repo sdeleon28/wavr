@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <sstream>
 #include <iostream>
@@ -37,7 +38,8 @@ struct FmtSubChunk {
 struct DataSubChunk {
     char id[5];
     uint32_t size;
-    std::vector<float> samples;
+    std::vector<int16_t> samples;
+    std::vector<float> float_samples;
 };
 
 struct Chunk {
@@ -73,8 +75,8 @@ int main() {
 
     int i = 0;
 
-    std::cout << "file size: " << size << std::endl;
-    std::cout << "=== riff ===" << std::endl;
+    // std::cout << "file size: " << size << std::endl;
+    // std::cout << "=== riff ===" << std::endl;
     chunk.riff.id[0] = buffer[i + 0];
     chunk.riff.id[1] = buffer[i + 1];
     chunk.riff.id[2] = buffer[i + 2];
@@ -86,10 +88,10 @@ int main() {
     chunk.riff.format[2] = buffer[i + 10];
     chunk.riff.format[3] = buffer[i + 11];
     chunk.riff.format[4] = '\0';
-    std::cout << "chunk_size: " << chunk.riff.chunk_size << std::endl;
-    std::cout << "format: " << chunk.riff.format << std::endl;
+    // std::cout << "chunk_size: " << chunk.riff.chunk_size << std::endl;
+    // std::cout << "format: " << chunk.riff.format << std::endl;
 
-    std::cout << "=== fmt ====" << std::endl;
+    // std::cout << "=== fmt ====" << std::endl;
     chunk.fmt.id[0] = buffer[i + 12];
     chunk.fmt.id[1] = buffer[i + 13];
     chunk.fmt.id[2] = buffer[i + 14];
@@ -103,23 +105,51 @@ int main() {
     chunk.fmt.block_align = *reinterpret_cast<uint16_t*>(&buffer[i + 32]);
     chunk.fmt.bits_per_sample = *reinterpret_cast<uint16_t*>(&buffer[i + 34]);
 
-    std::cout << "id: " << chunk.fmt.id << std::endl;
-    std::cout << "size: " << chunk.fmt.size << std::endl;
-    std::cout << "audio_format: " << chunk.fmt.audio_format << std::endl;
-    std::cout << "num_channels: " << chunk.fmt.num_channels << std::endl;
-    std::cout << "sample_rate: " << chunk.fmt.sample_rate << std::endl;
-    std::cout << "byte_rate: " << chunk.fmt.byte_rate << std::endl;
-    std::cout << "block_align: " << chunk.fmt.block_align << std::endl;
-    std::cout << "bits_per_sample: " << chunk.fmt.bits_per_sample << std::endl;
-    std::cout << "=== data ===" << std::endl;
+    // std::cout << "id: " << chunk.fmt.id << std::endl;
+    // std::cout << "size: " << chunk.fmt.size << std::endl;
+    // std::cout << "audio_format: " << chunk.fmt.audio_format << std::endl;
+    // std::cout << "num_channels: " << chunk.fmt.num_channels << std::endl;
+    // std::cout << "sample_rate: " << chunk.fmt.sample_rate << std::endl;
+    // std::cout << "byte_rate: " << chunk.fmt.byte_rate << std::endl;
+    // std::cout << "block_align: " << chunk.fmt.block_align << std::endl;
+    // std::cout << "bits_per_sample: " << chunk.fmt.bits_per_sample << std::endl;
 
-    /* std::ofstream out_file("out.txt"); */
-    /* if (!out_file.is_open()) { */
-    /*     std::cerr << "Failed to open out.txt for writing" << std::endl; */
-    /*     return 2; */
-    /* } */
-    /* out_file << out_stream.str(); */
-    /* out_file.close(); */
+    uint32_t offset = 36;
+    DataSubChunk data_sub_chunk;
 
+    // std::cout << "=== data ===" << std::endl;
+    while (offset < size) {
+        data_sub_chunk.id[0] = buffer[offset + 0];
+        data_sub_chunk.id[1] = buffer[offset + 1];
+        data_sub_chunk.id[2] = buffer[offset + 2];
+        data_sub_chunk.id[3] = buffer[offset + 3];
+        data_sub_chunk.id[4] = '\0';
+        data_sub_chunk.size = *reinterpret_cast<uint32_t*>(&buffer[offset + 4]);
+        if (std::string(data_sub_chunk.id, 4) == "data") {
+            data_sub_chunk.samples.reserve(data_sub_chunk.size / sizeof(int16_t));
+            data_sub_chunk.float_samples.reserve(data_sub_chunk.size / sizeof(float));
+            for (size_t data_i = 0; data_i < data_sub_chunk.size; data_i += sizeof(int16_t)) {
+                int16_t sample;
+                std::memcpy(&sample, &buffer[offset + 8 + data_i], sizeof(int16_t));
+                data_sub_chunk.samples.push_back(sample);
+                float sampleFloat = (sample - 32768) / 32768.0f;
+                data_sub_chunk.float_samples.push_back(sampleFloat);
+            }
+            // std::cout << "id: " << data_sub_chunk.id << std::endl;
+            // std::cout << "size: " << data_sub_chunk.size << std::endl;
+            // std::cout << "samples size: " << data_sub_chunk.samples.size() << std::endl;
+            break;
+        }
+        offset += data_sub_chunk.size;
+        // skip over the padding
+        while (buffer[offset] == 0) offset++;
+    }
+    chunk.data = data_sub_chunk;
+    // std::cout << "FOUND IT" << std::endl;
+    
+    // print out float contents to stdout
+    // give this as input to plot.py to visualize if you got the right data in
+    for (size_t x = 0; x < chunk.data.float_samples.size(); ++x)
+        std::cout << chunk.data.float_samples[x] << std::endl;
     return 0;
 }
