@@ -129,12 +129,13 @@ int main() {
         data_sub_chunk.size = *reinterpret_cast<uint32_t*>(&buffer[offset + 4]);
         if (std::string(data_sub_chunk.id, 4) == "data") {
             data_sub_chunk.samples.reserve(data_sub_chunk.size / sizeof(int16_t));
-            data_sub_chunk.float_samples.reserve(data_sub_chunk.size / sizeof(float));
+            data_sub_chunk.float_samples.reserve(data_sub_chunk.size / sizeof(int16_t));
             for (size_t data_i = 0; data_i < data_sub_chunk.size; data_i += sizeof(int16_t)) {
                 int16_t sample;
                 std::memcpy(&sample, &buffer[offset + 8 + data_i], sizeof(int16_t));
                 data_sub_chunk.samples.push_back(sample);
-                float sampleFloat = (sample - 32768) / 32768.0f;
+                // Normalize signed 16-bit PCM sample to [-1.0, 1.0) range
+                float sampleFloat = static_cast<float>(sample) / 32768.0f;
                 data_sub_chunk.float_samples.push_back(sampleFloat);
             }
             // std::cout << "id: " << data_sub_chunk.id << std::endl;
