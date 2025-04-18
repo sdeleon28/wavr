@@ -2,3 +2,6 @@
 /input.wav
 /out_samples.txt
 /waveform.png
+/left.txt
+/right.txt
+/out_mixed.txt

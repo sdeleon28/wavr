@@ -18,6 +18,8 @@
     #error Platform not supported
 #endif
 
+#include "ChannelIterator.h"
+
 struct RiffChunkDescriptor {
     char id[5];
     uint32_t chunk_size;
@@ -147,9 +149,27 @@ int main() {
     chunk.data = data_sub_chunk;
     // std::cout << "FOUND IT" << std::endl;
     
+    std::vector<ChannelIterator> channel_iterators;
+    for (uint16_t channel = 0; channel < chunk.fmt.num_channels; ++channel) {
+        channel_iterators.push_back(
+            ChannelIterator(
+                chunk.data.float_samples.begin() + channel,
+                chunk.data.float_samples.end() - chunk.fmt.num_channels + channel,
+                chunk.fmt.num_channels
+            )
+        );
+    }
+
     // print out float contents to stdout
     // give this as input to plot.py to visualize if you got the right data in
-    for (size_t x = 0; x < chunk.data.float_samples.size(); ++x)
-        std::cout << chunk.data.float_samples[x] << std::endl;
+    ChannelIterator left = channel_iterators[0];
+    for (float sample : left)
+        std::cout << "LEFT:" << sample << std::endl;
+
+    ChannelIterator right = channel_iterators[1];
+    for (float sample : right)
+        std::cout << "RIGHT:" << sample << std::endl;
+    // for (size_t x = 0; x < chunk.data.float_samples.size(); ++x)
+
     return 0;
 }
