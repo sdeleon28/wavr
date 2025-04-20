@@ -3,7 +3,7 @@
 int main() {
     try {
         wavr::WavFile wav = wavr::read_wav("input.wav");
-        auto channels = wavr::channel_iterators(wav);
+        auto channels = wavr::channels(wav);
         for (float sample : channels[0])
             std::cout << "LEFT:" << sample << std::endl;
         for (float sample : channels[1])

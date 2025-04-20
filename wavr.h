@@ -182,7 +182,7 @@ private:
     int step;
 };
 
-inline std::vector<ChannelIterator> channel_iterators(WavFile& wav) {
+inline std::vector<ChannelIterator> channels(WavFile& wav) {
     std::vector<ChannelIterator> channel_iterators;
     for (uint16_t channel = 0; channel < wav.fmt.num_channels; ++channel) {
         channel_iterators.push_back(
