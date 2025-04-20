@@ -9,6 +9,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <iterator>
 
 #if defined(__linux__)
 #include <endian.h>
@@ -21,6 +22,8 @@
 #else
 #error Platform not supported
 #endif
+
+#include "ChannelIterator.h"
 
 namespace wavr {
 
@@ -147,6 +150,20 @@ inline void write_wav(const std::string& filename, const WavFile& wav) {
     outFile.write(reinterpret_cast<const char*>(&wav.data.size), sizeof(wav.data.size));
     outFile.write(reinterpret_cast<const char*>(wav.data.samples.data()),
                   wav.data.samples.size() * sizeof(int16_t));
+}
+
+inline std::vector<ChannelIterator> channel_iterators(WavFile& wav) {
+    std::vector<ChannelIterator> channel_iterators;
+    for (uint16_t channel = 0; channel < wav.fmt.num_channels; ++channel) {
+        channel_iterators.push_back(
+            ChannelIterator(
+                wav.data.float_samples.begin() + channel,
+                wav.data.float_samples.end() - wav.fmt.num_channels + channel,
+                wav.fmt.num_channels
+            )
+        );
+    }
+    return channel_iterators;
 }
 
 } // namespace wavr

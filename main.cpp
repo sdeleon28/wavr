@@ -1,18 +1,13 @@
 #include "wavr.h"
 
-// example code of how one might use ChannelIterator
-// print out float contents to stdout
-// give this as input to plot.py to visualize if you got the right data in
-// ChannelIterator left = channel_iterators[0];
-// for (float sample : left)
-//     std::cout << "LEFT:" << sample << std::endl;
-// ChannelIterator right = channel_iterators[1];
-// for (float sample : right)
-//     std::cout << "RIGHT:" << sample << std::endl;
-
 int main() {
     try {
         wavr::WavFile wav = wavr::read_wav("input.wav");
+        auto channels = wavr::channel_iterators(wav);
+        for (float sample : channels[0])
+            std::cout << "LEFT:" << sample << std::endl;
+        for (float sample : channels[1])
+            std::cout << "RIGHT:" << sample << std::endl;
         wavr::write_wav("out.wav", wav);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
