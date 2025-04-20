@@ -5,7 +5,5 @@ build:
   cmake --build build/ --target wavr
 
 run:
-  ./build/wavr > out_samples.txt
-  cat out_samples.txt | grep LEFT | cut -d":" -f2 > left.txt
-  cat out_samples.txt | grep RIGHT | cut -d":" -f2 > right.txt
-  venv/bin/python play.py
+  # Read input.wav and write reconstructed WAV to out.wav
+  ./build/wavr

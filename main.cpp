@@ -18,7 +18,7 @@
     #error Platform not supported
 #endif
 
-#include "ChannelIterator.h"
+// ChannelIterator is no longer used; writing functionality added
 
 struct RiffChunkDescriptor {
     char id[5];
@@ -138,9 +138,6 @@ int main() {
                 float sampleFloat = static_cast<float>(sample) / 32768.0f;
                 data_sub_chunk.float_samples.push_back(sampleFloat);
             }
-            // std::cout << "id: " << data_sub_chunk.id << std::endl;
-            // std::cout << "size: " << data_sub_chunk.size << std::endl;
-            // std::cout << "samples size: " << data_sub_chunk.samples.size() << std::endl;
             break;
         }
         offset += data_sub_chunk.size;
@@ -148,29 +145,43 @@ int main() {
         while (buffer[offset] == 0) offset++;
     }
     chunk.data = data_sub_chunk;
-    // std::cout << "FOUND IT" << std::endl;
-    
-    std::vector<ChannelIterator> channel_iterators;
-    for (uint16_t channel = 0; channel < chunk.fmt.num_channels; ++channel) {
-        channel_iterators.push_back(
-            ChannelIterator(
-                chunk.data.float_samples.begin() + channel,
-                chunk.data.float_samples.end() - chunk.fmt.num_channels + channel,
-                chunk.fmt.num_channels
-            )
-        );
-    }
 
+    // Write output WAV file
+    std::ofstream outFile("out.wav", std::ios::binary);
+    if (!outFile) {
+        std::cerr << "Failed to open out.wav for writing" << std::endl;
+        return 3;
+    }
+    // Write RIFF chunk descriptor
+    outFile.write(chunk.riff.id, 4);
+    outFile.write(reinterpret_cast<const char*>(&chunk.riff.chunk_size), sizeof(chunk.riff.chunk_size));
+    outFile.write(chunk.riff.format, 4);
+    // Write fmt subchunk
+    outFile.write(chunk.fmt.id, 4);
+    outFile.write(reinterpret_cast<const char*>(&chunk.fmt.size), sizeof(chunk.fmt.size));
+    outFile.write(reinterpret_cast<const char*>(&chunk.fmt.audio_format), sizeof(chunk.fmt.audio_format));
+    outFile.write(reinterpret_cast<const char*>(&chunk.fmt.num_channels), sizeof(chunk.fmt.num_channels));
+    outFile.write(reinterpret_cast<const char*>(&chunk.fmt.sample_rate), sizeof(chunk.fmt.sample_rate));
+    outFile.write(reinterpret_cast<const char*>(&chunk.fmt.byte_rate), sizeof(chunk.fmt.byte_rate));
+    outFile.write(reinterpret_cast<const char*>(&chunk.fmt.block_align), sizeof(chunk.fmt.block_align));
+    outFile.write(reinterpret_cast<const char*>(&chunk.fmt.bits_per_sample), sizeof(chunk.fmt.bits_per_sample));
+    // Write data subchunk header
+    outFile.write(chunk.data.id, 4);
+    outFile.write(reinterpret_cast<const char*>(&chunk.data.size), sizeof(chunk.data.size));
+    // Write sample data
+    outFile.write(reinterpret_cast<const char*>(chunk.data.samples.data()),
+                  chunk.data.samples.size() * sizeof(int16_t));
+    outFile.close();
+
+    // example code of how one might use ChannelIterator
     // print out float contents to stdout
     // give this as input to plot.py to visualize if you got the right data in
-    ChannelIterator left = channel_iterators[0];
-    for (float sample : left)
-        std::cout << "LEFT:" << sample << std::endl;
-
-    ChannelIterator right = channel_iterators[1];
-    for (float sample : right)
-        std::cout << "RIGHT:" << sample << std::endl;
-    // for (size_t x = 0; x < chunk.data.float_samples.size(); ++x)
+    // ChannelIterator left = channel_iterators[0];
+    // for (float sample : left)
+    //     std::cout << "LEFT:" << sample << std::endl;
+    // ChannelIterator right = channel_iterators[1];
+    // for (float sample : right)
+    //     std::cout << "RIGHT:" << sample << std::endl;
 
     return 0;
 }
