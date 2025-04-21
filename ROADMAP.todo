@@ -8,7 +8,17 @@
 [X] write script to validate samples by visualizing
 [X] validate -> looks good
 [X] write script to validate samples by playback
-[-] validate
-    [ ] playback of out_samples.txt requires double the sample rate for some reason
-        [ ] are we recording samples twice?
-        [ ] does input.wav have 44.1k sample rate?
+[X] validate
+
+## writer
+
+[X] write content back into output file
+[X] validate
+
+## processing
+
+[-] implement an API that takes a std::function and repeatedly calls it with blocks
+    [-] should get block size as some kind of config
+    [-] for now let's just make it so it can write into the float_samples buffer itself, no const protection
+    [-] implement an example where we apply .5f gain to the entire wav file, then we write to lower.wav
+[ ] do a const protected version of the process API
