@@ -148,8 +148,21 @@ inline void write_wav(const std::string& filename, const WavFile& wav) {
     // Write data subchunk
     outFile.write(wav.data.id, 4);
     outFile.write(reinterpret_cast<const char*>(&wav.data.size), sizeof(wav.data.size));
-    outFile.write(reinterpret_cast<const char*>(wav.data.samples.data()),
-                  wav.data.samples.size() * sizeof(int16_t));
+    // If float_samples present, convert to int16 and write; otherwise write raw samples
+    if (!wav.data.float_samples.empty()) {
+        std::vector<int16_t> int_samples;
+        int_samples.reserve(wav.data.float_samples.size());
+        for (float f : wav.data.float_samples) {
+            if (f > 1.0f) f = 1.0f;
+            if (f < -1.0f) f = -1.0f;
+            int_samples.push_back(static_cast<int16_t>(f * 32767.0f));
+        }
+        outFile.write(reinterpret_cast<const char*>(int_samples.data()),
+                      int_samples.size() * sizeof(int16_t));
+    } else {
+        outFile.write(reinterpret_cast<const char*>(wav.data.samples.data()),
+                      wav.data.samples.size() * sizeof(int16_t));
+    }
 }
 
 class ChannelIterator {

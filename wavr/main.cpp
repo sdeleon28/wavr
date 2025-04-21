@@ -19,14 +19,6 @@ int main() {
             }
         }, block_size);
 
-        // Convert processed float samples back to int16 for writing
-        for (size_t i = 0; i < wav.data.samples.size(); ++i) {
-            float f = wav.data.float_samples[i];
-            if (f > 1.0f) f = 1.0f;
-            if (f < -1.0f) f = -1.0f;
-            wav.data.samples[i] = static_cast<int16_t>(f * 32767.0f);
-        }
-
         wavr::write_wav("lower.wav", wav);
     } catch (const std::exception& e) {
         std::cerr << "Error: " << e.what() << std::endl;
