@@ -17,8 +17,33 @@
 
 ## processing
 
-[-] implement an API that takes a std::function and repeatedly calls it with blocks
-    [-] should get block size as some kind of config
-    [-] for now let's just make it so it can write into the float_samples buffer itself, no const protection
-    [-] implement an example where we apply .5f gain to the entire wav file, then we write to lower.wav
+[X] implement an API that takes a std::function and repeatedly calls it with blocks
+    [X] should get block size as some kind of config
+    [X] for now let's just make it so it can write into the float_samples buffer itself, no const protection
+    [X] implement an example where we apply .5f gain to the entire wav file, then we write to lower.wav
+    [X] move float conversion to int16_t into the write function
+        [X] whenever we write, float_samples should overwrite the int16_t samples (because we'll do our DSP with the floats)
 [ ] do a const protected version of the process API
+
+## testing utilities
+
+[ ] write a function that takes a signal - that looks like the return value of `wavr::channels` - and calculates its frequency
+[ ] add an `EXPECT_FREQUENCY_NEAR(actual, expected)` assertion function/macro to `TestUtils.h` that allows you to compare 2 frequencies to see if they're "near" each other. this should be similar to the `EXPECT_NEAR` macro but should take into account the exponential/logarithmic relationships between frequencies to determine whether they're "near" each other
+[ ] write an `EXPECT_SIGNALS_CORRELATE(actual_signal, expected_signal)` assertion function/macro to compare 2 signals and see if they correlate "enough", add it to `TestingUtils.h`. this should allow you to apply some processing, set up an expected waveform and compare the resulting one to it
+
+## utility scripts
+
+[ ] write a python script that creates a test signal (pure sinewave) as a wav file, params to the script should be: frequency, length in milliseconds
+[ ] make it easy to create test signals (add an entry to the `Justfile`)
+
+## pitch shifting
+
+[ ] create a 1kHz, 1sec testing sample
+[ ] write a unit test that does `EXPECT_FREQUENCY_NEAR(tdpsola::pitch_shift(_1k_signal, 2.f), 2000.f)` - notice the second argument to `pitch_shift` is a factor
+[ ] create a 2kHz, 1sec testing sample
+[ ] write a unit test that does `EXPECT_SIGNALS_CORRELATE(tdpsola::pitch_shift(_1k_signal, 2.f), _2k_signal)`
+[ ] write the `tdpsola::pitch_shift` algorithm until all tests pass
+[ ] write a unit test that does `EXPECT_FREQUENCY_NEAR(tdpsola::pitch_shift(_1k_signal, 0.5f), 500.f)`
+[ ] create a 500Hz, 1sec testing sample
+[ ] write a unit test that does `EXPECT_SIGNALS_CORRELATE(tdpsola::pitch_shift(_1k_signal, 5.f), _500_signal)`
+[ ] modify the `tdpsola::pitch_shift` algorithm until all tests pass
