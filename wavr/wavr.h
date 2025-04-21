@@ -10,6 +10,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <iterator>
+#include <functional>
+#include <algorithm>
 
 #if defined(__linux__)
 #include <endian.h>
@@ -194,6 +196,19 @@ inline std::vector<ChannelIterator> channels(WavFile& wav) {
         );
     }
     return channel_iterators;
+}
+
+// Processing API: apply a callback to blocks of float samples
+inline void process(WavFile& wav,
+                    const std::function<void(float* data, uint32_t frames)>& callback,
+                    uint32_t block_size) {
+    uint32_t num_channels = wav.fmt.num_channels;
+    uint32_t total_frames = static_cast<uint32_t>(wav.data.float_samples.size()) / num_channels;
+    for (uint32_t offset = 0; offset < total_frames; offset += block_size) {
+        uint32_t current_frames = std::min(block_size, total_frames - offset);
+        float* ptr = wav.data.float_samples.data() + static_cast<size_t>(offset) * num_channels;
+        callback(ptr, current_frames);
+    }
 }
 
 } // namespace wavr
